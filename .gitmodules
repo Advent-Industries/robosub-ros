@@ -1,6 +1,1 @@
-[submodule "landside/catkin_ws/src/simulation/library/include"]
-	path = landside/catkin_ws/src/simulation/library/include
-	url = https://github.com/CoppeliaRobotics/include.git
-[submodule "landside/catkin_ws/src/simulation/library/common"]
-	path = landside/catkin_ws/src/simulation/library/common
-	url = https://github.com/CoppeliaRobotics/common.git
+
