@@ -32,10 +32,11 @@
 #define QUADRATIC_DRAG 1 // true is drag should be quadratic, rather than linear
 #define PI 3.14159
 
-// define robot constants
-float *centerOfBuoy = (float *)malloc(3 * sizeof(float));
+// define robot constants, these could go inside doEverything() as well
+
+float dragCoef = 1; // not sure if we need separate coefficients for linear and angular
+float thrusterPower = 100;
 vector<float> centerOfBuoy(3, 0);
-float *thrusterPositions = (float *)malloc(8 * 3 * sizeof(float));
 vector<vector<float>> thrusterPositions;
 
 #define CONCAT(x, y, z) x y z
@@ -45,7 +46,7 @@ vector<vector<float>> thrusterPositions;
 
 static LIBRARY simLib; // the CoppelisSim library that we will dynamically load and bind
 
-int calcBuoyancy(int handle, float *buoy)
+void calcBuoyancy(int handle, float *buoy)
 {
     // buoyancy = rho * V * g, where V is volume of object underwater
     // calculates V assuming the object fills the entire space of its bounding box
@@ -92,14 +93,35 @@ int calcBuoyancy(int handle, float *buoy)
     buoy[1] = 0;
     buoy[2] = buoyForce;
 }
-void doEverything(int handle, vector<vector<float>> thrusterForces)
+void doEverything(int handle, vector<float> thrusterValues)
 {
+    float minsize[3];
+    float maxsize[3];
+    float objsize[3];
+
+    for (int i = 0; i < 2; i++)
+    {
+        if (simGetObjectFloatParameter(handle, 15 + i, minsize + i) != 0)
+            return -1;
+        if (simGetObjectFloatParameter(handle, 18 + i, maxsize + i) != 0)
+            return -1;
+        objsize[i] = maxsize[i] - minsize[i];
+    }
+    float length = objsize[0];                                                // x size
+    float diameter = sqrt(objsize[1] * objsize[1] + objsize[2] * objsize[2]); // assuming it's kind of a square
+
+    thrusterForces = get_thrusterForces(thrusterValues, thrusterPower);
     apply_thrusterForces(thrusterForces, thrusterPositions, handle);
-    calcBuoyancy(handle, centerOfBuoy);
-    applyBuoyancy(handle, buoy);
-    getLinDrag
-        getAngDrag(dragCoeff, angVel, r, height);
-    applyAngDrag(torque, handle);
+
+    float buoy[3];
+    calcBuoyancy(handle, buoy);
+    applyBuoyancy(handle, centerOfBuoy);
+
+    vector<float> linDrag = getLinDrag(dragCoef, linVel, diameter, height);
+    applyLinDrag(linDrag, handle);
+
+    vector<float> angDrag = getAngDrag(dragCoef, angVel, diameter / 2, height);
+    applyAngDrag(angDrag, handle); // in physicsLibrary it's (torque, handle) is this the same?
 }
 //bounyancy, angular drag, linear drag, thrusterforces
 
