@@ -1,2 +1,2 @@
 #!/bin/bash
-x86_64-w64-mingw32-g++ -shared -o simExtLibTest.dll -static -static-libgcc -static-libstdc++ -I include -I include/stack common/*.cpp common/stack/*.cpp simExtLibTest.c PhysicsLibrary.c -fPIC -g -lshlwapi -lwinmm -lws2_32 
+x86_64-w64-mingw32-g++ -shared -o simExtLibTest.dll -static -static-libgcc -static-libstdc++ -I include -I include/stack common/*.cpp common/stack/*.cpp simExtLibTest.c PhysicsLibrary.c PhysicsLibrary.h -fPIC -g -lshlwapi -lwinmm -lws2_32 

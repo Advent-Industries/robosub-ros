@@ -1,5 +1,5 @@
 #include "simExtLibTest.h"
-#include "PhysicsLibrary.c"
+#include "PhysicsLibrary.h"
 
 //#include "stackArray.h"
 //#include "stackMap.h"
@@ -32,7 +32,6 @@
 #define RHO 1000         // density of water
 #define WATER_HEIGHT 0   // the z height of the water
 #define QUADRATIC_DRAG 1 // true is drag should be quadratic, rather than linear
-#define PI 3.14159
 
 using std::vector;
 
@@ -56,6 +55,11 @@ int doEverything(int handle, vector<float> thrusterValues)
     float maxsize[3];
     float objsize[3];
 
+    vector<float> linVel;
+    vector<float> angVel;
+
+    simGetVelocity(handle, linVel.data(), angVel.data());
+
     for (int i = 0; i < 2; i++)
     {
         if (simGetObjectFloatParameter(handle, 15 + i, minsize + i) != 0)
@@ -74,10 +78,10 @@ int doEverything(int handle, vector<float> thrusterValues)
     calcBuoyancy(handle, buoy);
     applyBuoyancy(handle, centerOfBuoy);
 
-    vector<float> linDrag = getLinDrag(dragCoef, linVel, diameter, height);
+    vector<float> linDrag = getLinDrag(dragCoef, linVel, diameter, length);
     applyLinDrag(linDrag, handle);
 
-    vector<float> angDrag = getAngDrag(dragCoef, angVel, diameter / 2, height);
+    vector<float> angDrag = getAngDrag(dragCoef, angVel, diameter / 2, length);
     applyAngDrag(angDrag, handle); // in physicsLibrary it's (torque, handle) is this the same?
 
     return 0;
