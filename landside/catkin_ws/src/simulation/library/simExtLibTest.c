@@ -100,28 +100,27 @@ void LUA_SIMPLEBUOY_CALLBACK(SScriptCallBack *p)
     CStackArray inArguments;
     inArguments.buildFromStack(stack);
     simAddLog("Libtest", sim_verbosity_msgs, "in thing addlog");
+    printf("in c++ callback\n");
+    printf("is map? %d\n", inArguments.isMap(1));
+    printf("is array? %d\n", inArguments.isArray(1, 0));
 
-    if ((inArguments.getSize() >= 2) && inArguments.isString(0) && inArguments.isNumber(1))
+    if ((inArguments.getSize() >= 2) && inArguments.isNumber(0) && inArguments.isArray(1, 8))
     { // we expect at least 2 arguments: a string and a map
 
-        std::string tmp("we received a string (");
-        tmp += inArguments.getString(0).c_str();
-        tmp += ") and also the handle (";
-        tmp += inArguments.getInt(1);
-        tmp += ")";
-        printf("args: %s, %d\n", inArguments.getString(0).c_str(), inArguments.getInt(1));
+        CStackArray* thrusters = inArguments.getArray(1);
+        vector<float> thrusterVec;
 
-        int handle = inArguments.getInt(1);
+        printf("args: %d, %s\n", inArguments.getInt(0), thrusters->toString().c_str());
 
-        simAddLog("Library TEst", sim_verbosity_msgs, tmp.c_str());
-        float center[3] = {0, 0, .5};
-        float force[3] = {0, 0, .5};
-        calcBuoyancy(handle, force);
-        //force[2] = 12;
-        printf("after calc buoy\n");
-        printf("buoy force: %f, %f, %f\n", force[0], force[1], force[2]);
-        simAddForce(handle, center, force);
-        printf("after add force\n");
+        int handle = inArguments.getInt(0);
+
+        for (int i = 0; i < 8 ; i++) {
+            thrusterVec.push_back(thrusters->getFloat(i));
+        }
+
+        doEverything(handle, thrusterVec);
+        printf("after do everything\n");
+
     }
     else
         simSetLastError(LUA_SIMPLEBUOY_COMMAND, "Not enough arguments or wrong arguments.");
@@ -197,7 +196,7 @@ SIM_DLLEXPORT unsigned char simStart(void *reservedPointer, int reservedInt)
     simRegisterScriptVariable("simSkeleton", "require('simExtLibTest')", 0);
 
     // Register the new function:
-    simRegisterScriptCallbackFunction(strConCat(LUA_SIMPLEBUOY_COMMAND, "@", "PluginSkeleton"), strConCat("...=", LUA_SIMPLEBUOY_COMMAND, "(string data1, number data2)"), LUA_SIMPLEBUOY_CALLBACK);
+    simRegisterScriptCallbackFunction(strConCat(LUA_SIMPLEBUOY_COMMAND, "@", "PluginSkeleton"), strConCat("...=", LUA_SIMPLEBUOY_COMMAND, "(number data1, array data2)"), LUA_SIMPLEBUOY_CALLBACK);
 
     return (PLUGIN_VERSION); // initialization went fine, we return the version number of this plugin (can be queried with simGetModuleName)
 }
