@@ -60,12 +60,10 @@ int doEverything(int handle, vector<float> thrusterValues)
 
     simGetVelocity(handle, linVel.data(), angVel.data());
 
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 3; i++)
     {
-        if (simGetObjectFloatParameter(handle, 15 + i, minsize + i) != 0)
-            return -1;
-        if (simGetObjectFloatParameter(handle, 18 + i, maxsize + i) != 0)
-            return -1;
+        simGetObjectFloatParameter(handle, 15 + i, minsize + i);
+        simGetObjectFloatParameter(handle, 18 + i, maxsize + i);
         objsize[i] = maxsize[i] - minsize[i];
     }
     float length = objsize[0];                                                // x size
@@ -107,20 +105,20 @@ void LUA_SIMPLEBUOY_CALLBACK(SScriptCallBack *p)
     if ((inArguments.getSize() >= 2) && inArguments.isNumber(0) && inArguments.isArray(1, 8))
     { // we expect at least 2 arguments: a string and a map
 
-        CStackArray* thrusters = inArguments.getArray(1);
+        CStackArray *thrusters = inArguments.getArray(1);
         vector<float> thrusterVec;
 
         printf("args: %d, %s\n", inArguments.getInt(0), thrusters->toString().c_str());
 
         int handle = inArguments.getInt(0);
 
-        for (int i = 0; i < 8 ; i++) {
+        for (int i = 0; i < 8; i++)
+        {
             thrusterVec.push_back(thrusters->getFloat(i));
         }
 
         doEverything(handle, thrusterVec);
         printf("after do everything\n");
-
     }
     else
         simSetLastError(LUA_SIMPLEBUOY_COMMAND, "Not enough arguments or wrong arguments.");

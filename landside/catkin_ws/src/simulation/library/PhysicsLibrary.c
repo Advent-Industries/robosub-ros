@@ -70,10 +70,10 @@ int applyBuoyancy(int handle, vector<float> centerOfBuoy)
 {
     vector<float> buoy(3, 0);
     if (calcBuoyancy(handle, buoy.data()) != 0)
-        return -1;
+        printf("error calculating");
     if (simAddForce(handle, buoy.data(), centerOfBuoy.data()) != 0)
-        return -1;
-
+        printf("error adding force");
+    printf("buoydata: %f %f %f", buoy.data()[0], buoy.data()[1], buoy.data()[2]);
     return 0;
 }
 
