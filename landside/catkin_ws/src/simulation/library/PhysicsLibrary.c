@@ -16,6 +16,16 @@
 
 using namespace std;
 
+vector<float> arrayToVector(float *arr, int size)
+{
+    vector<float> ret;
+    for (int i = 0; i < size; i++)
+    {
+        ret.push_back(arr[i]);
+    }
+    return ret;
+}
+
 int calcBuoyancy(int handle, float *buoy)
 {
     // buoyancy = rho * V * g, where V is volume of object underwater
@@ -70,9 +80,9 @@ int applyBuoyancy(int handle, vector<float> centerOfBuoy)
 {
     vector<float> buoy(3, 0);
     if (calcBuoyancy(handle, buoy.data()) != 0)
-        printf("error calculating");
+        printf("error calculating\n ");
     if (simAddForce(handle, buoy.data(), centerOfBuoy.data()) != 0)
-        printf("error adding force");
+        printf("error adding force\n ");
     printf("buoydata: %f %f %f", buoy.data()[0], buoy.data()[1], buoy.data()[2]);
     return 0;
 }
@@ -80,7 +90,6 @@ int applyBuoyancy(int handle, vector<float> centerOfBuoy)
 vector<float> getLinDrag(float dragCoef, vector<float> linVel, float diameter, float length)
 {
     vector<float> dragForce(3, 0);
-
     for (int i = 1; i < 3; i++)
     {
         dragForce[i] = -0.5 * RHO * dragCoef * linVel[i] * linVel[i];

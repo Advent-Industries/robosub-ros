@@ -55,10 +55,16 @@ int doEverything(int handle, vector<float> thrusterValues)
     float maxsize[3];
     float objsize[3];
 
+    float linVelArr[3];
+    float angVelArr[3];
+
     vector<float> linVel;
     vector<float> angVel;
 
-    simGetVelocity(handle, linVel.data(), angVel.data());
+    simGetVelocity(handle, linVelArr, angVelArr);
+
+    linVel = arrayToVector(linVelArr, 3);
+    angVel = arrayToVector(angVelArr, 3);
 
     for (int i = 0; i < 3; i++)
     {
@@ -70,7 +76,7 @@ int doEverything(int handle, vector<float> thrusterValues)
     float diameter = sqrt(objsize[1] * objsize[1] + objsize[2] * objsize[2]); // assuming it's kind of a square
 
     vector<vector<float>> thrusterForces = get_thrusterForces(thrusterValues, thrusterPower);
-    apply_thrusterForces(thrusterForces, thrusterPositions, handle);
+    //apply_thrusterForces(thrusterForces, thrusterPositions, handle);
 
     float buoy[3];
     calcBuoyancy(handle, buoy);

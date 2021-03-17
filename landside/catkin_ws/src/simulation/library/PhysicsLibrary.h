@@ -4,6 +4,7 @@
 #include <vector>
 using namespace std;
 
+vector<float> arrayToVector(float *arr, int size);
 int calcBuoyancy(int handle, float *buoy);
 int applyBuoyancy(int handle, vector<float> centerOfBuoy);
 vector<float> getLinDrag(float dragCoef, vector<float> linVel, float diameter, float length);
