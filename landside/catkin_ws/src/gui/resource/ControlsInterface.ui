@@ -29,7 +29,7 @@
     </rect>
    </property>
    <property name="title">
-    <string>Pose</string>
+    <string>Desired Pose</string>
    </property>
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
@@ -167,7 +167,7 @@
     </rect>
    </property>
    <property name="title">
-    <string>Twist</string>
+    <string>Desired Twist</string>
    </property>
    <widget class="QWidget" name="layoutWidget_6">
     <property name="geometry">
@@ -284,12 +284,12 @@
    <property name="handleWidth">
     <number>30</number>
    </property>
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="run_launch_file">
     <property name="text">
      <string>Run Launch File</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_2">
+   <widget class="QPushButton" name="controls_enable">
     <property name="text">
      <string>Enable Controls</string>
     </property>
