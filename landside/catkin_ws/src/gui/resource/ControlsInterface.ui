@@ -31,12 +31,12 @@
    <property name="title">
     <string>Pose</string>
    </property>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>10</x>
       <y>30</y>
-      <width>262</width>
+      <width>274</width>
       <height>81</height>
      </rect>
     </property>
@@ -174,7 +174,7 @@
      <rect>
       <x>10</x>
       <y>30</y>
-      <width>262</width>
+      <width>274</width>
       <height>81</height>
      </rect>
     </property>
