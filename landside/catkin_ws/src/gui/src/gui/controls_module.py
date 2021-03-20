@@ -18,18 +18,34 @@ class ControlsWidget(QWidget):
         """
         :param context: plugin context hook to enable adding widgets as a ROS_GUI pane, ''PluginContext''
         """
-        super(BagWidget, self).__init__()
-        rp = rospkg.RosPack()
-        ui_file = os.path.join(rospkg.RosPack().get_path('gui'), 'resource', 'MyPlugin.ui')
+        super(ControlsWidget, self).__init__()
+
+        # Process standalone plugin command-line arguments
+        from argparse import ArgumentParser
+        parser = ArgumentParser()
+        # Add argument(s) to the parser.
+        parser.add_argument("-q", "--quiet", action="store_true",
+                      dest="quiet",
+                      help="Put plugin in silent mode")
+        args, unknowns = parser.parse_known_args(context.argv())
+        if not args.quiet:
+            print ('arguments: ', args)
+            print ('unknowns: ', unknowns)
+
+        rp = rospkg.RosPack() # delete later
+        ui_file = os.path.join(rospkg.RosPack().get_path('gui'), 'resource', 'ControlsInterface.ui')
         loadUi(ui_file, self)
 
         self.setObjectName('ControlsWidget')
 
-        self._timeline = BagTimeline(context)
-        self.graphics_view.setScene(self._timeline)
-
         self.graphics_view.resizeEvent = self._resizeEvent
         self.graphics_view.setMouseTracking(True)
+
+        # define buttons
+        self.pose_enable = QIcon.fromTheme()
+        self.twist_enable = QIcon.fromTheme()
+        self.pushButton = QIcon.fromTheme()
+        self.pushButton_2 = QIcon.fromTheme()
 
         self.play_icon = QIcon.fromTheme('media-playback-start')
         self.pause_icon = QIcon.fromTheme('media-playback-pause')
