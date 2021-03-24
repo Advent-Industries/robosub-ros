@@ -15,6 +15,7 @@ from python_qt_binding.QtGui import QFileDialog, QGraphicsView, QIcon, QWidget
 
 import paramiko.client.SSHClient
 
+#TODO make checkbox for sim mode
 
 class ControlsWidget(QWidget):
     """
@@ -49,10 +50,10 @@ class ControlsWidget(QWidget):
         self.graphics_view.setMouseTracking(True)
 
         # define buttons
-        self.pose_enable = QIcon.fromTheme() # fill in with icon
-        self.twist_enable = QIcon.fromTheme()
-        self.run_launch_file = QIcon.fromTheme()
-        self.controls_enable = QIcon.fromTheme()
+        # self.pose_enable = QIcon.fromTheme() # fill in with icon
+        # self.twist_enable = QIcon.fromTheme()
+        # self.run_launch_file = QIcon.fromTheme()
+        # self.controls_enable = QIcon.fromTheme()
 
         self.pose_enable.clicked[bool].connect(self._handle_pose_enable_clicked)
         self.twist_enable.clicked[bool].connect(self._handle_twist_enable_clicked)
@@ -60,7 +61,20 @@ class ControlsWidget(QWidget):
         self.controls_enable.clicked[bool].connect(self._handle_controls_enable_clicked)
 
         # example: self.play_icon = QIcon.fromTheme('media-playback-start')
- 
+
+        self.x_pose.singleStep(0.1)
+        self.y_pose.singleStep(0.1)
+        self.z_pose.singleStep(0.1)
+        self.roll_pose.singleStep(0.1)
+        self.pitch_pose.singleStep(0.1)
+        self.yaw_pose.singleStep(0.1)
+        self.x_twist.singleStep(0.1)
+        self.y_twist.singleStep(0.1)
+        self.z_twist.singleStep(0.1)
+        self.roll_twist.singleStep(0.1)
+        self.pitch_twist.singleStep(0.1)
+        self.yaw_twist.singleStep(0.1)
+
         self.closeEvent = self.handle_close
         self.keyPressEvent = self.on_key_press
         # TODO when the closeEvent is properly called by ROS_GUI implement that event instead of destroyed
@@ -81,6 +95,18 @@ class ControlsWidget(QWidget):
         self._recording = False
 
         self._timeline.status_bar_changed_signal.connect(self._update_status_bar)
+
+        # Initializing SSH clients for all available commands
+        self.launch_file_client = SSHClient()
+        self.launch_file_client.load_system_host_keys()
+
+        self.publish_pose_client = SSHClient()
+        self.publish_pose_client.load_system_host_keys()
+
+        self.publish_twist_client = SSHClient()
+        self.publish_twist_client.load_system_host_keys()
+
+
 
     def graphics_view_on_key_press(self, event):
         key = event.key()
@@ -128,12 +154,12 @@ class ControlsWidget(QWidget):
 
     # our methods
     def _handle_pose_enable_clicked(self):
-        linear_x = 0.0
-        linear_y = 0.0
-        linear_z = 0.0
-        angular_x = 0.0
-        angular_y = 0.0
-        angular_z = 0.0
+        linear_x  = self.x_pose.value()
+        linear_y  = self.y_pose.value()
+        linear_z  = self.z_pose.value()
+        angular_x = self.roll_pose.value()
+        angular_y = self.pitch_pose.value()
+        angular_z = self.yaw_pose.value()
         # TODO create from text input 
         
 
@@ -141,19 +167,17 @@ class ControlsWidget(QWidget):
         "'{{linear: {{x: {lin_x}, y: {lin_y}, z: {lin_z}}}, angular: {{x: {ang_x}, y: {ang_y}, z: {ang_z}}} }}'").format(lin_x = linear_x, lin_y=linear_y, lin_z=linear_z, 
         ang_x=angular_x, ang_y=angular_y, ang_z=angular_z)
 
-        client = SSHClient()
-        client.load_system_host_keys()
-        client.connect('192.168.1.1',port=2200,username='root',password='robotics')
-        stdin, stdout, stderr = client.exec_command(command_format)
-        client.close()
+        self.publish_pose_client.connect('192.168.1.1',port=2200,username='root',password='robotics')
+        stdin, stdout, stderr = self.publish_pose_client.exec_command(command_format)
+        self.publish_pose_client.close()
     
     def _handle_twist_enable_clicked(self):
-        linear_x = 0.0
-        linear_y = 0.0
-        linear_z = 0.0
-        angular_x = 0.0
-        angular_y = 0.0
-        angular_z = 0.0
+        linear_x  = self.x_twist.value()
+        linear_y  = self.y_twist.value()
+        linear_z  = self.z_twist.value()
+        angular_x = self.roll_twist.value()
+        angular_y = self.pitch_twist.value()
+        angular_z = self.yaw_twist.value()
         # TODO create from text input
 
 
@@ -161,19 +185,16 @@ class ControlsWidget(QWidget):
         "'{{linear: {{x: {lin_x}, y: {lin_y}, z: {lin_z}}}, angular: {{x: {ang_x}, y: {ang_y}, z: {ang_z}}} }}'").format(lin_x = linear_x, lin_y=linear_y, lin_z=linear_z, 
         ang_x=angular_x, ang_y=angular_y, ang_z=angular_z)
 
-        client = SSHClient()
-        client.load_system_host_keys()
-        client.connect('192.168.1.1',port=2200,username='root',password='robotics')
-        stdin, stdout, stderr = client.exec_command(command_format)
-        client.close()
+        self.publish_twist_client.connect('192.168.1.1',port=2200,username='root',password='robotics')
+        stdin, stdout, stderr = self.publish_twist_client.exec_command(command_format)
+        self.publish_twist_client.close()
 
     def _handle_run_launch_file_clicked(self): 
         # TODO Check with Muthu
-        client = SSHClient()
-        client.load_system_host_keys()
-        client.connect('192.168.1.1',port=2200,username='root',password='robotics')
-        stdin, stdout, stderr = client.exec_command('roslaunch execute motion.launch')
-        client.close()
+
+        self.launch_file_client.connect('192.168.1.1',port=2200,username='root',password='robotics')
+        stdin, stdout, stderr = self.launch_file_client.exec_command('roslaunch execute motion.launch')
+        self.launch_file_client.close()
 
     def _handle_controls_enable_clicked(self):
         rospy.wait_for_service('enable_controls')
