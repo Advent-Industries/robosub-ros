@@ -13,6 +13,8 @@ from python_qt_binding import loadUi
 from python_qt_binding.QtCore import Qt
 from python_qt_binding.QtGui import QFileDialog, QGraphicsView, QIcon, QWidget
 
+import paramiko.client.SSHClient
+
 
 class ControlsWidget(QWidget):
     """
@@ -126,19 +128,62 @@ class ControlsWidget(QWidget):
 
     # our methods
     def _handle_pose_enable_clicked(self):
-        os.system('')
+        linear_x = 0.0
+        linear_y = 0.0
+        linear_z = 0.0
+        angular_x = 0.0
+        angular_y = 0.0
+        angular_z = 0.0
+        # TODO create from text input 
+        
+
+        command_format = ("rostopic pub -r 15 /controls/desired_pose geometry_msgs/Pose " +
+        "'{{linear: {{x: {lin_x}, y: {lin_y}, z: {lin_z}}}, angular: {{x: {ang_x}, y: {ang_y}, z: {ang_z}}} }}'").format(lin_x = linear_x, lin_y=linear_y, lin_z=linear_z, 
+        ang_x=angular_x, ang_y=angular_y, ang_z=angular_z)
+
+        client = SSHClient()
+        client.load_system_host_keys()
+        client.connect('192.168.1.1',port=2200,username='root',password='robotics')
+        stdin, stdout, stderr = client.exec_command(command_format)
+        client.close()
     
     def _handle_twist_enable_clicked(self):
-        os.system('')
+        linear_x = 0.0
+        linear_y = 0.0
+        linear_z = 0.0
+        angular_x = 0.0
+        angular_y = 0.0
+        angular_z = 0.0
+        # TODO create from text input
 
-    def _handle_run_launch_file_clicked(self):
-        os.system('roslaunch execute motion.launch') # execute a script w an arg that sends cmd to onboard
+
+        command_format = ("rostopic pub -r 15 /controls/desired_twist geometry_msgs/Twist " +
+        "'{{linear: {{x: {lin_x}, y: {lin_y}, z: {lin_z}}}, angular: {{x: {ang_x}, y: {ang_y}, z: {ang_z}}} }}'").format(lin_x = linear_x, lin_y=linear_y, lin_z=linear_z, 
+        ang_x=angular_x, ang_y=angular_y, ang_z=angular_z)
+
+        client = SSHClient()
+        client.load_system_host_keys()
+        client.connect('192.168.1.1',port=2200,username='root',password='robotics')
+        stdin, stdout, stderr = client.exec_command(command_format)
+        client.close()
+
+    def _handle_run_launch_file_clicked(self): 
+        # TODO Check with Muthu
+        client = SSHClient()
+        client.load_system_host_keys()
+        client.connect('192.168.1.1',port=2200,username='root',password='robotics')
+        stdin, stdout, stderr = client.exec_command('roslaunch execute motion.launch')
+        client.close()
 
     def _handle_controls_enable_clicked(self):
-        os.system('rosservice call /enable_controls true') 
-
+        rospy.wait_for_service('enable_controls')
+        try:
+            enable_controls = rospy.ServiceProxy('enable_controls', SetBool)
+            res = enable_controls(True) # TODO gui will need to say something about failure for res
+        except rospy.ServiceException as e:
+            print("Service call failed: %s"%e) 
+        
     # preexisting methods that aren't necessary 
-
     def _handle_load_clicked(self):
         filename = QFileDialog.getOpenFileName(self, self.tr('Load from File'), '.', self.tr('Bag files {.bag} (*.bag)'))
         if filename[0] != '':
