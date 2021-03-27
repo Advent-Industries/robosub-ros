@@ -55,10 +55,39 @@ class ControlsWidget(QWidget):
         # self.run_launch_file = QIcon.fromTheme()
         # self.controls_enable = QIcon.fromTheme()
 
-        self.pose_enable.clicked[bool].connect(self._handle_pose_enable_clicked)
+        # Ties buttons to handler functions
+        self.pose_enable.clicked[bool].connect(self._handle_pose_button_clicked)
         self.twist_enable.clicked[bool].connect(self._handle_twist_enable_clicked)
         self.run_launch_file.clicked[bool].connect(self._handle_run_launch_file_clicked)
         self.controls_enable.clicked[bool].connect(self._handle_controls_enable_clicked)
+        
+        # All possible values for background color and text stored here
+        self.background_colors = {
+            "default" : "background-color: #ebfbff",
+            "green"   : "background-color: #8aff92",
+            "red"     : "background-color: #ff7878"
+        }
+
+        self.button_text = {
+            "publish_disabled"  : "Start Publishing",
+            "publish_enabled"   : "STOP Publishing",
+            "launch_disabled"   : "Run Launch File",
+            "launch_enabled"    : "STOP Launch File",
+            "controls_disabled" : "Enable Controls",
+            "controls_enabled"  : "Disable Controls",
+        }
+
+        self.pose_enable.setStyleSheet(self.background_colors["default"])
+        self.twist_enable.setStyleSheet(self.background_colors["default"])
+        self.run_launch_file.setStyleSheet(self.background_colors["green"])
+        self.controls_enable.setStyleSheet(self.background_colors["green"])
+
+
+        # Holds state of whether actively running desired pose/twist
+        self.pose_enable_state = False
+        self.twist_enable_state = False
+        self.launch_enable_state = False
+        self.controls_enable_state = False
 
         # example: self.play_icon = QIcon.fromTheme('media-playback-start')
 
@@ -79,24 +108,12 @@ class ControlsWidget(QWidget):
         self.keyPressEvent = self.on_key_press
         # TODO when the closeEvent is properly called by ROS_GUI implement that event instead of destroyed
         self.destroyed.connect(self.handle_destroy)
+        # TODO make the handle_destroy function that closes SSH
 
-        self.graphics_view.keyPressEvent = self.graphics_view_on_key_press
-        self.play_button.setEnabled(False)
-        self.thumbs_button.setEnabled(False)
-        self.zoom_in_button.setEnabled(False)
-        self.zoom_out_button.setEnabled(False)
-        self.zoom_all_button.setEnabled(False)
-        self.faster_button.setEnabled(False)
-        self.slower_button.setEnabled(False)
-        self.begin_button.setEnabled(False)
-        self.end_button.setEnabled(False)
-        self.save_button.setEnabled(False)
 
-        self._recording = False
-
-        self._timeline.status_bar_changed_signal.connect(self._update_status_bar)
 
         # Initializing SSH clients for all available commands
+        # TODO refactor into more specific ssh class
         self.launch_file_client = SSHClient()
         self.launch_file_client.load_system_host_keys()
 
@@ -153,7 +170,25 @@ class ControlsWidget(QWidget):
         self.graphics_view.scene().setSceneRect(0, 0, self.graphics_view.width() - 2, max(self.graphics_view.height() - 2, self._timeline._timeline_frame._history_bottom))
 
     # our methods
-    def _handle_pose_enable_clicked(self):
+    def disable_pose(self):
+        self.publish_pose_client.close()
+        self.pose_enable_state = False
+        
+        # Set the button color and text
+        self.pose_enable.setStyleSheet(self.background_colors["default"])
+        self.pose_enable.setText(self.button_text["publish_disabled"])
+    
+    def disable_twist(self):
+        self.publish_twist_client.close()
+        self.twist_enable_state = False
+
+        # Set the button color and text
+        self.twist_enable.setStyleSheet(self.background_colors["default"])
+        self.twist_enable.setText(self.button_text["publish_disabled"])
+
+    def enable_pose(self):
+        self.pose_enable_state = True
+
         linear_x  = self.x_pose.value()
         linear_y  = self.y_pose.value()
         linear_z  = self.z_pose.value()
@@ -169,9 +204,14 @@ class ControlsWidget(QWidget):
 
         self.publish_pose_client.connect('192.168.1.1',port=2200,username='root',password='robotics')
         stdin, stdout, stderr = self.publish_pose_client.exec_command(command_format)
-        self.publish_pose_client.close()
-    
-    def _handle_twist_enable_clicked(self):
+
+        # Set the button color and text
+        self.pose_enable.setStyleSheet(self.background_colors["red"])
+        self.pose_enable.setText(self.button_text["publish_enabled"])
+
+    def enable_twist(self):
+        self.twist_enable_state = True
+
         linear_x  = self.x_twist.value()
         linear_y  = self.y_twist.value()
         linear_z  = self.z_twist.value()
@@ -187,50 +227,68 @@ class ControlsWidget(QWidget):
 
         self.publish_twist_client.connect('192.168.1.1',port=2200,username='root',password='robotics')
         stdin, stdout, stderr = self.publish_twist_client.exec_command(command_format)
-        self.publish_twist_client.close()
 
-    def _handle_run_launch_file_clicked(self): 
-        # TODO Check with Muthu
+        # Set the button color and text
+        self.twist_enable.setStyleSheet(self.background_colors["red"])
+        self.twist_enable.setText(self.button_text["publish_enabled"])
 
-        self.launch_file_client.connect('192.168.1.1',port=2200,username='root',password='robotics')
-        stdin, stdout, stderr = self.launch_file_client.exec_command('roslaunch execute motion.launch')
-        self.launch_file_client.close()
+    def _handle_pose_button_clicked(self):
+        if self.pose_enable_state:
+            # pose was enabled, disable pose
+            self.disable_pose()
 
-    def _handle_controls_enable_clicked(self):
+        else:
+            # pose was disabled, make sure twist is off and enable pose
+            if self.twist_enable_state:
+                self.disable_twist()
+            
+            self.enable_pose()
+    
+    def _handle_twist_button_clicked(self):
+        if self.twist_enable_state:
+            # twist was enabled, disable twist
+            self.disable_twist()
+
+        else:
+            # twist was disabled, make sure pose is off and enable twist
+            if self.pose_enable_state:
+                self.disable_pose()
+            
+            self.enable_twist()
+        
+        
+    def _handle_launch_file_button_clicked(self): 
+        self.launch_enable_state = not self.launch_enable_state
+        if self.launch_enable_state:
+            self.launch_file_client.connect('192.168.1.1',port=2200,username='root',password='robotics')
+            stdin, stdout, stderr = self.launch_file_client.exec_command('roslaunch execute motion.launch')
+
+            # Set colors and text
+            self.launch_enable.setStyleSheet(self.background_colors["red"])
+            self.launch_enable.setText(self.button_text["launch_enabled"])
+        else:
+            self.launch_file_client.close()
+
+            # Set colors and text
+            self.launch_enable.setStyleSheet(self.background_colors["green"])
+            self.launch_enable.setText(self.button_text["launch_disabled"])
+
+    # TODO time out so gui doesnt freeze when service nonexistant
+    def _handle_controls_state_button_clicked(self):
+        self.controls_enable_state = not self.controls_enable_state
+
+        # Set colors and text
+        if self.controls_enable_state:
+            self.controls_enable.setStyleSheet(self.background_colors["red"])
+            self.controls_enable.setText(self.button_text["controls_enabled"])
+        else:
+            self.controls_enable.setStyleSheet(self.background_colors["green"])
+            self.controls_enable.setText(self.button_text["controls_disabled"])
+
         rospy.wait_for_service('enable_controls')
         try:
             enable_controls = rospy.ServiceProxy('enable_controls', SetBool)
-            res = enable_controls(True) # TODO gui will need to say something about failure for res
+            res = enable_controls(self.controls_enable_state) # TODO gui will need to say something about failure for res
         except rospy.ServiceException as e:
             print("Service call failed: %s"%e) 
         
-    # preexisting methods that aren't necessary 
-    def _handle_load_clicked(self):
-        filename = QFileDialog.getOpenFileName(self, self.tr('Load from File'), '.', self.tr('Bag files {.bag} (*.bag)'))
-        if filename[0] != '':
-            self.load_bag(filename[0])
-
-    def load_bag(self, filename):
-        bag = rosbag.Bag(filename)
-        self.play_button.setEnabled(True)
-        self.thumbs_button.setEnabled(True)
-        self.zoom_in_button.setEnabled(True)
-        self.zoom_out_button.setEnabled(True)
-        self.zoom_all_button.setEnabled(True)
-        self.faster_button.setEnabled(True)
-        self.slower_button.setEnabled(True)
-        self.begin_button.setEnabled(True)
-        self.end_button.setEnabled(True)
-        self.save_button.setEnabled(True)
-        self.record_button.setEnabled(False)
-        self._timeline.add_bag(bag)
-
-    def _handle_save_clicked(self):
-        filename = QFileDialog.getSaveFileName(self, self.tr('Save selected region to file...'), '.', self.tr('Bag files {.bag} (*.bag)'))
-        if filename[0] != '':
-            self._timeline.copy_region_to_bag(filename[0])
-
-    # Shutdown all members
-
-    def shutdown_all(self):
-        self._timeline.handle_close()
