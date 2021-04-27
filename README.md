@@ -47,15 +47,15 @@ The following components make up our software stack:
 The general flow of information between components is shown in the diagram below, from top to bottom:
 
 ```
-        sensors (IMU, DVL, etc.)                cameras
+        Sensors (IMU, Pressue, etc.)            Cameras
             \                                     / \
              \                                   /   \
               v                                 /     v
-            Data Pub                           /   Camera View
+  Data Storage / Consolidation                 /   Camera Live Stream
                 \                             /
- Simulation ---> \          Acoustics        /
-                  v             |            v
-                Sensor Fusion   |      Computer Vision
+  Filtering ---> \          Acoustics        /
+                  v             |           v
+                Sensor Fusion   |      Computer Vision and Visual Tracking
                     \           |         /
                      \          |        /
                       v         v       v
@@ -63,11 +63,11 @@ The general flow of information between components is shown in the diagram below
                                |
                                |
                                v
-              Joystick ---> Controls
+                           Controls
                                |
-                               | ---> Simulation
+                               |  
                                v
-                         Offboard Comms
+                      Offboard Communications
                                |
                                |
                                v
